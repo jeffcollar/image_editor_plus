@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -22,27 +21,18 @@ class ImageItem {
 
       height = image.height;
       width = image.width;
-
-      image = imageFile.image;
       loader.complete(true);
-    } else if (imageFile is Uint8List) {
-      image = imageFile;
-      final buffer = await ImmutableBuffer.fromUint8List(imageFile);
-      final codec = await instantiateImageCodecFromBuffer(buffer);
-      final frame = await codec.getNextFrame();
-      decodedImage = frame.image;
-    } else {
-      image = await imageFile.readAsBytes();
-      final buffer = await ImmutableBuffer.fromUint8List(image);
-      final codec = await instantiateImageCodecFromBuffer(buffer);
-      final frame = await codec.getNextFrame();
-      decodedImage = frame.image;
-    }
+    } else if (image is Uint8List) {
+      bytes = image;
+      var decodedImage = await decodeImageFromList(bytes);
 
-    // image was decoded
-    if (decodedImage != null) {
-      // print(['height', viewportSize.height, decodedImage.height]);
-      // print(['width', viewportSize.width, decodedImage.width]);
+      height = decodedImage.height;
+      width = decodedImage.width;
+
+      return loader.complete(true);
+    } else if (image is XFile) {
+      bytes = await image.readAsBytes();
+      var decodedImage = await decodeImageFromList(bytes);
 
       height = decodedImage.height;
       width = decodedImage.width;
