@@ -23,18 +23,26 @@ class ImageItem {
       height = image.height;
       width = image.width;
 
-      return loader.complete(true);
-    } else if (image is Uint8List) {
-      bytes = image;
-      var decodedImage = await decodeImageFromList(bytes);
+      image = imageFile.image;
+      loader.complete(true);
+    } else if (imageFile is Uint8List) {
+      image = imageFile;
+      final buffer = await ImmutableBuffer.fromUint8List(imageFile);
+      final codec = await instantiateImageCodecFromBuffer(buffer);
+      final frame = await codec.getNextFrame();
+      decodedImage = frame.image;
+    } else {
+      image = await imageFile.readAsBytes();
+      final buffer = await ImmutableBuffer.fromUint8List(image);
+      final codec = await instantiateImageCodecFromBuffer(buffer);
+      final frame = await codec.getNextFrame();
+      decodedImage = frame.image;
+    }
 
-      height = decodedImage.height;
-      width = decodedImage.width;
-
-      return loader.complete(true);
-    } else if (image is XFile) {
-      bytes = await image.readAsBytes();
-      var decodedImage = await decodeImageFromList(bytes);
+    // image was decoded
+    if (decodedImage != null) {
+      // print(['height', viewportSize.height, decodedImage.height]);
+      // print(['width', viewportSize.width, decodedImage.width]);
 
       height = decodedImage.height;
       width = decodedImage.width;
